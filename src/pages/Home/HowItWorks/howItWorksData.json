@@ -1,0 +1,51 @@
+{
+  "title": "How It Works",
+  "subtitle": "Simple steps to get your packages delivered quickly and reliably",
+  "features": [
+    {
+      "id": 1,
+      "title": "Booking Pick & Drop",
+      "description": "Schedule a pickup at your convenience and we'll collect your package from your doorstep. Our reliable drivers ensure safe handling and timely drop-off at the destination.",
+      "icon": "📅",
+      "steps": [
+        "Book online or via app",
+        "Get instant confirmation",
+        "Driver arrives at your location"
+      ]
+    },
+    {
+      "id": 2,
+      "title": "Cash On Delivery",
+      "description": "We offer secure COD services where recipients can pay upon delivery. Our transparent process ensures you receive payments promptly after successful deliveries.",
+      "icon": "💰",
+      "steps": [
+        "Select COD option",
+        "Recipient pays upon delivery",
+        "Funds transferred to you within 24h"
+      ]
+    },
+    {
+      "id": 3,
+      "title": "Delivery Hub",
+      "description": "Our network of strategically located hubs enables efficient sorting and distribution. Packages are processed quickly for fastest possible delivery times.",
+      "icon": "🚚",
+      "steps": [
+        "Package received at hub",
+        "Automated sorting",
+        "Dispatched to destination area"
+      ]
+    },
+    {
+      "id": 4,
+      "title": "Booking SME & Corporate",
+      "description": "Dedicated solutions for businesses with bulk shipping needs. Enjoy customized logistics, volume discounts, and dedicated account management.",
+      "icon": "🏢",
+      "steps": [
+        "Dedicated account manager",
+        "Customized solutions",
+        "Volume discounts available"
+      ]
+    }
+  ],
+  "footerText": "From personal packages to business shipments — we deliver on time, every time with our reliable logistics network."
+}
