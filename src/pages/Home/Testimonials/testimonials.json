@@ -1,0 +1,72 @@
+[
+  {
+    "id": 1,
+    "quote": "Enhance posture, mobility, and well-being effortlessly with Posture Pro. Achieve proper alignment, reduce pain, and strengthen your body with ease!",
+    "name": "Rasel Ahamed",
+    "title": "Customer",
+    "image": "https://randomuser.me/api/portraits/men/32.jpg"
+  },
+  {
+    "id": 2,
+    "quote": "A posture corrector works by providing support and gentle alignment to your shoulders, back, and spine, encouraging you to maintain proper posture throughout the day.",
+    "name": "Awlad Hossain",
+    "title": "Senior Product Designer",
+    "image": "https://randomuser.me/api/portraits/men/45.jpg"
+  },
+  {
+    "id": 3,
+    "quote": "This product transformed my daily comfort. I no longer experience back pain after long hours at my desk.",
+    "name": "Nasir Uddin",
+    "title": "CEO",
+    "image": "https://randomuser.me/api/portraits/men/12.jpg"
+  },
+  {
+    "id": 4,
+    "quote": "As someone who works 10+ hours on the computer, this has been a game-changer for my spinal health.",
+    "name": "Fatima Akter",
+    "title": "Software Engineer",
+    "image": "https://randomuser.me/api/portraits/women/25.jpg"
+  },
+  {
+    "id": 5,
+    "quote": "The quality exceeded my expectations. Lightweight yet provides perfect support for my posture.",
+    "name": "Kamal Hossain",
+    "title": "Office Manager",
+    "image": "https://randomuser.me/api/portraits/men/67.jpg"
+  },
+  {
+    "id": 6,
+    "quote": "I've tried many posture correctors but this one actually stays comfortable all day long.",
+    "name": "Sabrina Islam",
+    "title": "Graphic Designer",
+    "image": "https://randomuser.me/api/portraits/women/30.jpg"
+  },
+  {
+    "id": 7,
+    "quote": "My chronic neck pain has reduced significantly after just 2 weeks of regular use.",
+    "name": "Arif Rahman",
+    "title": "Content Creator",
+    "image": "https://randomuser.me/api/portraits/men/38.jpg"
+  },
+  {
+    "id": 8,
+    "quote": "Perfect for my work-from-home setup. My productivity has improved with better posture.",
+    "name": "Tasnim Ahmed",
+    "title": "Digital Marketer",
+    "image": "https://randomuser.me/api/portraits/women/42.jpg"
+  },
+  {
+    "id": 9,
+    "quote": "The adjustable straps make it suitable for any body type. Highly recommend!",
+    "name": "Rahim Khan",
+    "title": "Fitness Trainer",
+    "image": "https://randomuser.me/api/portraits/men/57.jpg"
+  },
+  {
+    "id": 10,
+    "quote": "Worth every penny. My physiotherapist noticed improved spinal alignment after a month.",
+    "name": "Nusrat Jahan",
+    "title": "Teacher",
+    "image": "https://randomuser.me/api/portraits/women/36.jpg"
+  }
+]
