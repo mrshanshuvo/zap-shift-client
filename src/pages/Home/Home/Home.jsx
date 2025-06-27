@@ -6,6 +6,7 @@ import ClientLogoSlider from '../ClientLogoSlider/ClientLogoSlider';
 import FeatureCards from '../FeatureCards/FeatureCards';
 import Merchant from '../Merchant/Merchant';
 import Testimonials from '../Testimonials/Testimonials';
+import FAQ from '../FAQ/FAQ';
 
 const Home = () => {
   return (
@@ -17,6 +18,7 @@ const Home = () => {
       <FeatureCards></FeatureCards>
       <Merchant></Merchant>
       <Testimonials></Testimonials>
+      <FAQ></FAQ>
     </div>
   );
 };
