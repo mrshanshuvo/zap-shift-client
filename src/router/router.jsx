@@ -9,7 +9,7 @@ import Coverage from "../pages/Coverage/Coverage";
 export const router = createBrowserRouter([
   {
     path: "/",
-    Component: RootLayout,
+    element: <div className="bg-[#EAECED] pt-8"><RootLayout></RootLayout></div>,
     children: [
       { index: true, Component: Home },
       { path: "coverage", Component: Coverage, loader: () => fetch("warehouses.json") },
