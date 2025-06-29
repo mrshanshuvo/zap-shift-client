@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { NavLink, useLocation } from "react-router";
 import ProFastLogo from "../ProFastLogo/ProFastLogo";
-import { SunIcon, MoonIcon } from "@heroicons/react/24/outline";
 
 const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -9,16 +8,9 @@ const Navbar = () => {
 
   const navItems = [
     { path: "/", label: "Home", end: true },
+    { path: "/coverage", label: "Coverage" },
     { path: "/about", label: "About Us" },
-    { path: "/services", label: "Services" },
-    { path: "/contact", label: "Contact" },
   ];
-
-  const toggleDarkMode = () => {
-    const currentTheme = document.documentElement.getAttribute("data-theme");
-    const newTheme = currentTheme === "dark" ? "light" : "dark";
-    document.documentElement.setAttribute("data-theme", newTheme);
-  };
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
 
@@ -58,16 +50,7 @@ const Navbar = () => {
             </svg>
           </button>
         </div>
-
-        {/* Logo */}
-        <NavLink
-          to="/"
-          className="btn btn-ghost text-xl p-0 hover:bg-transparent"
-          aria-label="Go to homepage"
-          onClick={closeMobileMenu}
-        >
-          <ProFastLogo />
-        </NavLink>
+        <ProFastLogo />
       </div>
 
       {/* Desktop Navigation */}
@@ -92,17 +75,8 @@ const Navbar = () => {
         </ul>
       </div>
 
+      {/* Call-to-action */}
       <div className="navbar-end gap-2">
-        {/* DaisyUI Dark Mode Toggle */}
-        <button
-          onClick={toggleDarkMode}
-          className="btn btn-ghost btn-circle"
-          aria-label="Toggle dark mode"
-        >
-          <SunIcon className="h-5 w-5 block dark:hidden" />
-          <MoonIcon className="h-5 w-5 hidden dark:block" />
-        </button>
-
         <NavLink
           to="/get-started"
           className="btn btn-primary hover:scale-105 transition-transform"
@@ -133,15 +107,6 @@ const Navbar = () => {
                 </NavLink>
               </li>
             ))}
-            <li className="mt-4">
-              <NavLink
-                to="/get-started"
-                onClick={closeMobileMenu}
-                className="btn btn-primary w-full"
-              >
-                Get Started
-              </NavLink>
-            </li>
           </ul>
         </div>
       )}

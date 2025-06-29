@@ -1,18 +1,38 @@
-import React from 'react';
-import { useForm } from 'react-hook-form';
-import { Link } from 'react-router';
+import React from "react";
+import { useForm } from "react-hook-form";
+import { Link } from "react-router";
+import useAuth from "../../../hooks/useAuth";
+import { GoogleAuthProvider } from "firebase/auth";
 
 const Register = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors }
+    formState: { errors },
   } = useForm();
+
+  const { createUser, signInWithGoogle } = useAuth();
 
   const onSubmit = (data) => {
     console.log(data);
-    // Handle registration logic here
+    createUser(data.email, data.password)
+      .then((userCredential) => {
+        console.log("User registered:", userCredential.user);
+      })
+      .catch((error) => {
+        console.error("Error registering user:", error);
+      });
   };
+
+  const handleGoogleSignIn = () => {
+    signInWithGoogle()
+      .then((result) => {
+        console.log("Google user:", result.user);
+      })
+      .catch((error) => {
+        console.error("Error signing in with Google:", error.code, error.message);
+      });
+  }
 
   return (
     <div className="space-y-6">
@@ -23,7 +43,10 @@ const Register = () => {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="name"
+            className="block text-sm font-medium text-gray-700"
+          >
             Name
           </label>
           <input
@@ -33,8 +56,8 @@ const Register = () => {
               required: "Name is required",
               minLength: {
                 value: 2,
-                message: "Name must be at least 2 characters"
-              }
+                message: "Name must be at least 2 characters",
+              },
             })}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             placeholder="Name"
@@ -45,7 +68,10 @@ const Register = () => {
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-gray-700"
+          >
             Email
           </label>
           <input
@@ -55,8 +81,8 @@ const Register = () => {
               required: "Email is required",
               pattern: {
                 value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                message: "Invalid email address"
-              }
+                message: "Invalid email address",
+              },
             })}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             placeholder="Email"
@@ -67,7 +93,10 @@ const Register = () => {
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="password"
+            className="block text-sm font-medium text-gray-700"
+          >
             Password
           </label>
           <input
@@ -77,14 +106,16 @@ const Register = () => {
               required: "Password is required",
               minLength: {
                 value: 6,
-                message: "Password must be at least 6 characters"
-              }
+                message: "Password must be at least 6 characters",
+              },
             })}
             className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
             placeholder="Password"
           />
           {errors.password && (
-            <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+            <p className="mt-1 text-sm text-red-600">
+              {errors.password.message}
+            </p>
           )}
         </div>
 
@@ -98,7 +129,10 @@ const Register = () => {
 
       <div className="text-center text-sm text-gray-600">
         Already have an account?{" "}
-        <Link to='/login' className="font-medium text-indigo-600 hover:text-indigo-500">
+        <Link
+          to="/login"
+          className="font-medium text-indigo-600 hover:text-indigo-500"
+        >
           Login
         </Link>
       </div>
@@ -113,8 +147,9 @@ const Register = () => {
       </div>
 
       <button
+        onClick={handleGoogleSignIn}
         type="button"
-        className="w-full flex justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+        className="w-full flex cursor-pointer justify-center items-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
       >
         <svg
           className="w-5 h-5 mr-2"
