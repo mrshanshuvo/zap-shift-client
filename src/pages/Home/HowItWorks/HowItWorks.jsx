@@ -1,6 +1,6 @@
 // src/components/HowItWorks.js
-import React, { useState } from 'react';
-import howItWorksData from '../../Home/HowItWorks/howItWorksData.json';
+import React, { useState } from "react";
+import howItWorksData from "../../Home/HowItWorks/howItWorksData.json";
 
 const HowItWorks = () => {
   const [activeFeature, setActiveFeature] = useState(null);
@@ -18,7 +18,6 @@ const HowItWorks = () => {
     <section className="py-8 px-4 sm:px-6 lg:px-8 mb-16">
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
-
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
             {howItWorksData.title}
           </h2>
@@ -32,18 +31,17 @@ const HowItWorks = () => {
             <div
               key={feature.id}
               onClick={() => toggleFeature(feature.id)}
-              className={`bg-white p-6 rounded-xl border-2 transition-all duration-300 cursor-pointer ${activeFeature === feature.id
-                ? 'border-blue-500 shadow-lg transform -translate-y-1'
-                : 'border-transparent hover:border-gray-200 hover:shadow-md'
-                }`}
+              className={`bg-white p-6 rounded-xl border-2 transition-all duration-300 cursor-pointer ${
+                activeFeature === feature.id
+                  ? "border-blue-500 shadow-lg transform -translate-y-1"
+                  : "border-transparent hover:border-gray-200 hover:shadow-md"
+              }`}
             >
               <div className="text-4xl mb-4">{feature.icon}</div>
               <h3 className="text-xl font-semibold text-gray-900 mb-3">
                 {feature.title}
               </h3>
-              <p className="text-gray-600 mb-4">
-                {feature.description}
-              </p>
+              <p className="text-gray-600 mb-4">{feature.description}</p>
 
               {activeFeature === feature.id && (
                 <div className="mt-4 pt-4 border-t border-gray-100">
@@ -68,7 +66,7 @@ const HowItWorks = () => {
               onClick={() => setIsExpanded(!isExpanded)}
               className="px-6 py-2 text-blue-600 font-medium rounded-lg hover:bg-blue-50 transition-colors"
             >
-              {isExpanded ? 'Show Less' : 'Show More Features'}
+              {isExpanded ? "Show Less" : "Show More Features"}
             </button>
           </div>
         )}

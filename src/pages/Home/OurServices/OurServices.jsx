@@ -39,10 +39,11 @@ const OurServices = () => {
             return (
               <div
                 key={service.id}
-                className={`bg-gray-50 p-8 rounded-xl border border-gray-100 flex flex-col justify-center items-center transition-all duration-300 ${hoveredCard === service.id
-                  ? "transform -translate-y-2 shadow-lg bg-white"
-                  : "hover:shadow-md"
-                  }`}
+                className={`bg-gray-50 p-8 rounded-xl border border-gray-100 flex flex-col justify-center items-center transition-all duration-300 ${
+                  hoveredCard === service.id
+                    ? "transform -translate-y-2 shadow-lg bg-white"
+                    : "hover:shadow-md"
+                }`}
                 onMouseEnter={() => setHoveredCard(service.id)}
                 onMouseLeave={() => setHoveredCard(null)}
               >

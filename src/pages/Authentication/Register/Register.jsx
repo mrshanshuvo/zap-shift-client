@@ -30,9 +30,13 @@ const Register = () => {
         console.log("Google user:", result.user);
       })
       .catch((error) => {
-        console.error("Error signing in with Google:", error.code, error.message);
+        console.error(
+          "Error signing in with Google:",
+          error.code,
+          error.message
+        );
       });
-  }
+  };
 
   return (
     <div className="space-y-6">

@@ -8,6 +8,7 @@ const Navbar = () => {
 
   const navItems = [
     { path: "/", label: "Home", end: true },
+    { path: "/addParcel", label: "Add Parcel" },
     { path: "/coverage", label: "Coverage" },
     { path: "/about", label: "About Us" },
   ];
@@ -62,9 +63,10 @@ const Navbar = () => {
                 to={item.path}
                 end={item.end}
                 className={({ isActive }) =>
-                  `px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${isActive
-                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm"
-                    : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+                  `px-4 py-2.5 text-sm font-medium rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm"
+                      : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`
                 }
               >
@@ -102,9 +104,10 @@ const Navbar = () => {
                 end={item.end}
                 onClick={closeMobileMenu}
                 className={({ isActive }) =>
-                  `block px-4 py-3 text-base font-medium rounded-lg transition-all duration-200 ${isActive
-                    ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm"
-                    : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+                  `block px-4 py-3 text-base font-medium rounded-lg transition-all duration-200 ${
+                    isActive
+                      ? "bg-slate-900 dark:bg-white text-white dark:text-slate-900 shadow-sm"
+                      : "text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
                   }`
                 }
                 aria-current={
