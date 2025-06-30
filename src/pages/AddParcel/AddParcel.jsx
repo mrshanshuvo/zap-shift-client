@@ -4,6 +4,10 @@ import "react-toastify/dist/ReactToastify.css";
 import { useState } from "react";
 import { useLoaderData } from "react-router";
 import { FiChevronDown } from "react-icons/fi";
+import Swal from "sweetalert2";
+import withReactContent from "sweetalert2-react-content";
+
+const MySwal = withReactContent(Swal);
 
 const AddParcel = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,70 +55,65 @@ const AddParcel = () => {
     setIsSubmitting(true);
     const cost = calculateCost(data);
 
-    toast.info(
-      <div className="p-4">
-        <div className="mb-3">
-          <p className="text-lg font-medium">
-            Delivery Estimate:{" "}
-            <span className="text-blue-600 font-bold">${cost.toFixed(2)}</span>
-          </p>
-          <div className="text-sm text-gray-600 mt-1">
-            <p>- Base delivery fee: ৳20</p>
-            {data.parcelType === "Document" ? (
-              <p>
-                - Document fee: ৳
-                {data.senderDistrict === data.receiverDistrict ? 60 : 80}
-              </p>
-            ) : (
-              <>
-                <p>
-                  - Non-Document base fee: ৳
-                  {data.senderDistrict === data.receiverDistrict ? 110 : 150}
-                </p>
-                {parseFloat(data.weight) > 3 && (
-                  <p>
-                    - Extra weight charge (+৳40/kg): ৳
-                    {(Math.ceil(parseFloat(data.weight) - 3) * 40).toFixed(2)}
-                  </p>
-                )}
-                {data.senderDistrict !== data.receiverDistrict &&
-                  parseFloat(data.weight) > 3 && (
-                    <p>- Additional outside city charge: ৳40</p>
-                  )}
-              </>
-            )}
-          </div>
-        </div>
-        <div className="flex gap-3">
-          <button
-            onClick={() => toast.dismiss()}
-            className="flex-1 py-2 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
-          >
-            Cancel
-          </button>
-          <button
-            onClick={() => confirmBooking(data, cost)}
-            className="flex-1 py-2 px-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-          >
-            Confirm Booking
-          </button>
-        </div>
-      </div>,
-      {
-        position: "top-center",
-        autoClose: false,
-        closeButton: false,
-        className: "!rounded-xl !shadow-lg",
-        toastId: "cost-estimation",
-      }
-    );
+    const isSameDistrict = data.senderDistrict === data.receiverDistrict;
+    const isDocument = data.parcelType === "Document";
+    const weight = parseFloat(data.weight);
+    const extraWeightCharge =
+      weight > 3 ? (Math.ceil(weight - 3) * 40).toFixed(2) : null;
+
+    let htmlContent = `
+    <div style="text-align: left; font-family: sans-serif;">
+      <p style="font-size: 1.1rem; font-weight: 600;">
+        Delivery Estimate: <span style="color: #2563eb; font-weight: 700;">৳${cost.toFixed(
+          2
+        )}</span>
+      </p>
+      <div style="margin-top: 10px; font-size: 0.9rem; color: #4b5563;">
+        ${
+          isDocument
+            ? `<p>- Document fee: ৳${isSameDistrict ? 60 : 80}</p>`
+            : `
+              <p>- Non-Document base fee: ৳${isSameDistrict ? 110 : 150}</p>
+              ${
+                extraWeightCharge
+                  ? `<p>- Extra weight charge (+৳40/kg): ৳${extraWeightCharge}</p>`
+                  : ""
+              }
+              ${
+                !isSameDistrict && extraWeightCharge
+                  ? `<p>- Additional outside city charge: ৳40</p>`
+                  : ""
+              }
+            `
+        }
+      </div>
+    </div>
+  `;
+
+    MySwal.fire({
+      title: "Confirm Your Booking",
+      html: htmlContent,
+      showCancelButton: true,
+      confirmButtonText: "Confirm Booking",
+      cancelButtonText: "Cancel",
+      customClass: {
+        popup: "rounded-xl shadow-lg",
+        confirmButton:
+          "bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700",
+        cancelButton:
+          "border border-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-100",
+      },
+      showCloseButton: true,
+      focusConfirm: false,
+      preConfirm: () => confirmBooking(data, cost),
+    });
 
     setIsSubmitting(false);
   };
 
   const calculateCost = (data) => {
     // Base delivery agent fee
-    let cost = 20;
+    let cost = 0;
 
     // Get distance type (within city or outside city/district)
     const isWithinCity = data.senderDistrict === data.receiverDistrict;
