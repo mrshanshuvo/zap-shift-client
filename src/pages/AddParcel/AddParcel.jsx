@@ -6,10 +6,24 @@ import { useLoaderData } from "react-router";
 import { FiChevronDown } from "react-icons/fi";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
+import useAuth from "../../hooks/useAuth";
+import useAxiosSecure from "../../hooks/useAxiosSecure";
 
 const MySwal = withReactContent(Swal);
+const generateTrackingId = () => {
+  return Math.random().toString(36).substring(2, 10).toUpperCase();
+};
 
 const AddParcel = () => {
+  const {
+    register,
+    handleSubmit,
+    watch,
+    setValue,
+    formState: { errors },
+  } = useForm();
+  const { user } = useAuth();
+  const axiosSecure = useAxiosSecure();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const serviceAreas = useLoaderData();
 
@@ -37,14 +51,6 @@ const AddParcel = () => {
     return area ? area.covered_area : [];
   };
 
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm();
-
   const parcelType = watch("parcelType", "Not-Document");
   const senderRegion = watch("senderRegion");
   const senderDistrict = watch("senderDistrict");
@@ -58,44 +64,58 @@ const AddParcel = () => {
     const isSameDistrict = data.senderDistrict === data.receiverDistrict;
     const isDocument = data.parcelType === "Document";
     const weight = parseFloat(data.weight);
-    const extraWeightCharge =
-      weight > 3 ? (Math.ceil(weight - 3) * 40).toFixed(2) : null;
+    const extraWeight = weight > 3 ? Math.ceil(weight - 3) : 0;
+    const extraWeightCharge = extraWeight > 0 ? extraWeight * 40 : 0;
+    const outsideCityCharge = !isSameDistrict && extraWeight > 0 ? 40 : 0;
 
-    let htmlContent = `
-    <div style="text-align: left; font-family: sans-serif;">
-      <p style="font-size: 1.1rem; font-weight: 600;">
-        Delivery Estimate: <span style="color: #2563eb; font-weight: 700;">৳${cost.toFixed(
-          2
-        )}</span>
-      </p>
-      <div style="margin-top: 10px; font-size: 0.9rem; color: #4b5563;">
-        ${
-          isDocument
-            ? `<p>- Document fee: ৳${isSameDistrict ? 60 : 80}</p>`
-            : `
-              <p>- Non-Document base fee: ৳${isSameDistrict ? 110 : 150}</p>
-              ${
-                extraWeightCharge
-                  ? `<p>- Extra weight charge (+৳40/kg): ৳${extraWeightCharge}</p>`
-                  : ""
-              }
-              ${
-                !isSameDistrict && extraWeightCharge
-                  ? `<p>- Additional outside city charge: ৳40</p>`
-                  : ""
-              }
-            `
+    // 💬 Dynamic Breakdown Text
+    let breakdownHtml = `
+    <div style="text-align: left; font-family: 'Segoe UI', sans-serif; font-size: 14.5px; line-height: 1.7;">
+      <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 8px;">📦 Parcel Type:</h3>
+      <p><strong>${isDocument ? "📄 Document" : "📦 Non-Document"}</strong></p>
+
+      <h3 style="font-size: 16px; font-weight: bold; margin: 15px 0 8px;">💰 Cost Breakdown:</h3>
+      <ul style="padding-left: 1.2rem; list-style-type: disc;">
+        ${isDocument
+        ? `<li>Base Delivery Fee (Document): <strong>৳${isSameDistrict ? 60 : 80
+        }</strong></li>`
+        : `
+              <li>Base Delivery Fee (Non-Document): <strong>৳${isSameDistrict ? 110 : 150
+        }</strong></li>
+              ${extraWeight > 0
+          ? `<li>⚖️ Extra Weight Fee (${extraWeight}kg × ৳40): <strong>৳${extraWeightCharge}</strong></li>`
+          : ""
         }
+              ${outsideCityCharge > 0
+          ? `<li>📍 Outside City Surcharge: <strong>৳${outsideCityCharge}</strong></li>`
+          : ""
+        }
+            `
+      }
+      </ul>
+
+      <h3 style="font-size: 16px; font-weight: bold; margin: 15px 0 8px;">📜 Rules & Regulations:</h3>
+      <ul style="padding-left: 1.2rem; list-style-type: square; color: #374151;">
+        <li>Parcel over 3kg will be charged extra (৳40 per extra kg).</li>
+        <li>Additional ৳40 applies for parcels over 3kg sent outside your district.</li>
+        <li>Delivery costs are final and non-refundable once confirmed.</li>
+      </ul>
+
+      <div style="margin-top: 20px; padding: 10px; background-color: #f0f9ff; border-radius: 6px; border-left: 4px solid #3b82f6;">
+        <p style="font-size: 16px; font-weight: bold;">Total Estimated Cost: <span style="color: #2563eb;">৳${cost.toFixed(
+        2
+      )}</span></p>
       </div>
     </div>
   `;
 
-    MySwal.fire({
-      title: "Confirm Your Booking",
-      html: htmlContent,
+    const result = await MySwal.fire({
+      title: "Confirm Delivery Pricing",
+      html: breakdownHtml,
       showCancelButton: true,
-      confirmButtonText: "Confirm Booking",
-      cancelButtonText: "Cancel",
+      showConfirmButton: true,
+      confirmButtonText: "✅ Proceed to Payment",
+      cancelButtonText: "✏️ Edit Parcel Info",
       customClass: {
         popup: "rounded-xl shadow-lg",
         confirmButton:
@@ -105,8 +125,11 @@ const AddParcel = () => {
       },
       showCloseButton: true,
       focusConfirm: false,
-      preConfirm: () => confirmBooking(data, cost),
     });
+
+    if (result.isConfirmed) {
+      await confirmBooking(data, cost);
+    }
 
     setIsSubmitting(false);
   };
@@ -143,33 +166,35 @@ const AddParcel = () => {
 
   const confirmBooking = async (data, cost) => {
     try {
+      const trackingId = generateTrackingId();
       const parcelData = {
         ...data,
         cost,
         status: "Pending",
+        createdBy: user?.email || "guest",
         creation_date: new Date().toISOString(),
+        trackingId: trackingId,
       };
 
       console.log("Booking parcel with data:", parcelData);
 
+      // Save parcel data to the server
+      axiosSecure.post("/parcels", parcelData).then((res) => {
+        console.log(res.data.data);
+        if (res.data.data.insertedId) {
+          //TODO: Redirect to the payment page
+          Swal.fire({
+            title: "Parcel Booked!",
+            text: "Redirecting to payment...",
+            icon: "success",
+            showConfirmButton: false,
+            timer: 2000,
+          })
+        }
+      });
+
       // Dismiss the estimation toast
       toast.dismiss("cost-estimation");
-
-      // Show success toast
-      toast.success(
-        <div>
-          <p className="font-medium">Parcel booked successfully!</p>
-          <p className="text-sm text-gray-600 mt-1">
-            Tracking ID: #
-            {Math.random().toString(36).substring(2, 10).toUpperCase()}
-          </p>
-        </div>,
-        {
-          position: "top-center",
-          autoClose: 5000,
-          className: "!rounded-xl",
-        }
-      );
     } catch (error) {
       toast.error("Failed to book parcel", {
         position: "top-center",
@@ -254,11 +279,10 @@ const AddParcel = () => {
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <label
-                    className={`flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-all ${
-                      parcelType === "Document"
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
+                    className={`flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-all ${parcelType === "Document"
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200 hover:border-gray-300"
+                      }`}
                   >
                     <input
                       type="radio"
@@ -268,11 +292,10 @@ const AddParcel = () => {
                     />
                     <div className="flex items-center">
                       <span
-                        className={`w-4 h-4 rounded-full border flex items-center justify-center mr-2 ${
-                          parcelType === "Document"
-                            ? "border-blue-500 bg-blue-500"
-                            : "border-gray-400"
-                        }`}
+                        className={`w-4 h-4 rounded-full border flex items-center justify-center mr-2 ${parcelType === "Document"
+                          ? "border-blue-500 bg-blue-500"
+                          : "border-gray-400"
+                          }`}
                       >
                         {parcelType === "Document" && (
                           <span className="w-2 h-2 bg-white rounded-full"></span>
@@ -282,11 +305,10 @@ const AddParcel = () => {
                     </div>
                   </label>
                   <label
-                    className={`flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-all ${
-                      parcelType === "Not-Document"
-                        ? "border-blue-500 bg-blue-50"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
+                    className={`flex items-center justify-center p-3 border rounded-lg cursor-pointer transition-all ${parcelType === "Not-Document"
+                      ? "border-blue-500 bg-blue-50"
+                      : "border-gray-200 hover:border-gray-300"
+                      }`}
                   >
                     <input
                       type="radio"
@@ -296,11 +318,10 @@ const AddParcel = () => {
                     />
                     <div className="flex items-center">
                       <span
-                        className={`w-4 h-4 rounded-full border flex items-center justify-center mr-2 ${
-                          parcelType === "Not-Document"
-                            ? "border-blue-500 bg-blue-500"
-                            : "border-gray-400"
-                        }`}
+                        className={`w-4 h-4 rounded-full border flex items-center justify-center mr-2 ${parcelType === "Not-Document"
+                          ? "border-blue-500 bg-blue-500"
+                          : "border-gray-400"
+                          }`}
                       >
                         {parcelType === "Not-Document" && (
                           <span className="w-2 h-2 bg-white rounded-full"></span>
