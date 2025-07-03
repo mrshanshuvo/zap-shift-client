@@ -1,6 +1,6 @@
 import React from "react";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import { FcGoogle } from "react-icons/fc";
 import useAuth from "../../../hooks/useAuth";
 
@@ -11,6 +11,10 @@ const Login = () => {
     formState: { errors },
   } = useForm();
   const { signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const from = location.state?.from || '/';
 
   const onSubmit = (data) => {
     console.log(data);
@@ -22,6 +26,7 @@ const Login = () => {
       .then((result) => {
         console.log("Google login successful:", result.user);
         // Redirect or show success message here
+        navigate(from, { replace: true });
       })
       .catch((error) => {
         console.error("Error during Google login:", error.code, error.message);
