@@ -1,17 +1,19 @@
 import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
 import { useQuery } from "@tanstack/react-query";
 import React, { useState } from "react";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import useAuth from "../../../hooks/useAuth";
+import Swal from "sweetalert2";
 
 const PaymentForm = () => {
   const stripe = useStripe();
   const elements = useElements();
   const { id } = useParams();
   const axiosSecure = useAxiosSecure();
-
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [error, setError] = useState(null);
-  const [success, setSuccess] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
 
   const { isPending, data: parcel = {} } = useQuery({
@@ -34,7 +36,6 @@ const PaymentForm = () => {
     event.preventDefault();
     setIsProcessing(true);
     setError(null);
-    setSuccess(null);
 
     if (!stripe || !elements) {
       setIsProcessing(false);
@@ -47,41 +48,67 @@ const PaymentForm = () => {
       return;
     }
 
-    const { error, paymentMethod } = await stripe.createPaymentMethod({
-      type: "card",
-      card: cardElement,
-    });
+    // Step 1: Create Payment Intent
+    try {
+      const { data } = await axiosSecure.post("/create-payment-intent", {
+        amount: parcel.cost,
+        parcelId: id,
+      });
 
-    if (error) {
-      setError(error.message);
-    } else {
-      setSuccess("Payment successful! Thank you.");
-      console.log("[PaymentMethod]", paymentMethod);
-    }
-    setIsProcessing(false);
+      const clientSecret = data.clientSecret;
 
-    // create-payment-intent
-    const res = await axiosSecure.post("/create-payment-intent", {
-      amount: parcel.cost,
-      parcelId: id,
-    });
-    console.log('res from payment intent', res);
-
-    if (res.data.clientSecret) {
-      const paymentResult = await stripe.confirmCardPayment(res.data.clientSecret, {
+      // Step 2: Confirm Card Payment
+      const paymentResult = await stripe.confirmCardPayment(clientSecret, {
         payment_method: {
           card: cardElement,
           billing_details: {
-            name: parcel.senderName,
-            email: parcel.senderEmail,
+            name: user?.displayName || "Unknown",
+            email: user?.email || "Unknown",
           },
         },
       });
+
       if (paymentResult.error) {
         setError(paymentResult.error.message);
-      } else if (paymentResult.paymentIntent.status === "succeeded") {
-        setSuccess("Payment successful! Thank you.");
+        setIsProcessing(false);
+        return;
       }
+
+      if (paymentResult.paymentIntent.status === "succeeded") {
+        const paymentIntent = paymentResult.paymentIntent;
+
+        // Step 3: Save to DB
+        const paymentData = {
+          parcelId: id,
+          email: user?.email,
+          transactionId: paymentIntent.id,
+          amount: paymentIntent.amount,
+          paymentTime: paymentIntent.created,
+          paymentMethod: paymentIntent.payment_method,
+        };
+
+        const paymentRes = await axiosSecure.post("/payments", paymentData);
+
+        if (paymentRes.data.data.paymentInsertResult.insertedId) {
+          // Step 4: Show SweetAlert and Redirect
+          Swal.fire({
+            icon: "success",
+            title: "Payment Successful!",
+            html: `
+            <p>Your payment has been completed.</p>
+            <p><strong>Transaction ID:</strong> ${paymentIntent.id}</p>
+          `,
+            confirmButtonText: "Go to My Parcels",
+          }).then(() => {
+            navigate("/dashboard/myParcels"); // Adjust the route if necessary
+          });
+        }
+      }
+    } catch (err) {
+      setError("Payment failed. Please try again.");
+      console.error(err);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -131,11 +158,6 @@ const PaymentForm = () => {
       <div className="space-y-6">
         <h2 className="text-2xl font-bold text-primary">Payment</h2>
 
-        {success && (
-          <div className="alert alert-success shadow-sm">
-            <span>{success}</span>
-          </div>
-        )}
         {error && (
           <div className="alert alert-error shadow-sm">
             <span>{error}</span>

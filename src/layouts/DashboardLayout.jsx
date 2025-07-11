@@ -14,7 +14,7 @@ const DashboardLayout = () => {
   const location = useLocation();
   const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
-  console.log(user);
+  // console.log(user);
   // Fetch parcels data
   const { data: parcelsData = [] } = useQuery({
     enabled: !!user?.email,

@@ -20,8 +20,8 @@ const MyParcels = () => {
       parcel.parcelType.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = filterStatus === "all" ||
-      (filterStatus === "paid" && parcel.isPaid) ||
-      (filterStatus === "unpaid" && !parcel.isPaid);
+      (filterStatus === "paid" && parcel.payment_status === "paid") ||
+      (filterStatus === "unpaid" && parcel.payment_status !== "paid");
 
     return matchesSearch && matchesStatus;
   });
@@ -60,25 +60,19 @@ const MyParcels = () => {
     }
   };
 
-  if (parcelsData.length === 0) {
+  if (filteredParcels.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="max-w-md mx-auto">
           <FiPackage className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-lg font-medium text-gray-900">No parcels yet</h3>
+          <h3 className="mt-2 text-lg font-medium text-gray-900">
+            {parcelsData.length === 0 ? "No parcels yet" : "No matching parcels found"}
+          </h3>
           <p className="mt-1 text-sm text-gray-500">
-            Get started by creating a new parcel shipment.
+            {parcelsData.length === 0
+              ? "Get started by creating a new parcel shipment."
+              : "Try adjusting your search or filter criteria."}
           </p>
-          <div className="mt-6">
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={() => navigate("/dashboard/new-parcel")}
-            >
-              <FiPlus className="-ml-1 mr-2 h-5 w-5" />
-              New Parcel
-            </button>
-          </div>
         </div>
       </div>
     );
@@ -140,13 +134,13 @@ const MyParcels = () => {
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <span
-                    className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${parcel.isPaid
+                    className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${parcel.payment_status === "paid"
                       ? "bg-green-100 text-green-800"
                       : "bg-yellow-100 text-yellow-800"
                       }`}
-                    aria-label={parcel.isPaid ? "Paid" : "Pending"}
+                    aria-label={parcel.payment_status === "paid" ? "Paid" : "Unpaid"}
                   >
-                    {parcel.isPaid ? "Paid" : "Pending"}
+                    {parcel.payment_status === "paid" ? "Paid" : "Unpaid"}
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
@@ -158,7 +152,7 @@ const MyParcels = () => {
                     >
                       <FiEye className="h-5 w-5" />
                     </button>
-                    {!parcel.isPaid && (
+                    {parcel.payment_status !== "paid" && (
                       <button
                         onClick={() => handlePay(parcel._id)}
                         className="text-yellow-600 hover:text-yellow-900"

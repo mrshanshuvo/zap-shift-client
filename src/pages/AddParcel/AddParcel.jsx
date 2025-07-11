@@ -170,8 +170,9 @@ const AddParcel = () => {
       const parcelData = {
         ...data,
         cost,
-        status: "Pending",
-        createdBy: user?.email || "guest",
+        created_by: user.email,
+        payment_status: 'unpaid',
+        delivery_status: 'not_collected',
         creation_date: new Date().toISOString(),
         trackingId: trackingId,
       };
