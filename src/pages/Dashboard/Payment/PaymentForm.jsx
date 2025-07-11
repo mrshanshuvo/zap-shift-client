@@ -1,5 +1,5 @@
 import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
-import { useQuery } from "@tanstack/react-query";
+import { QueryClient, useQuery } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
@@ -91,6 +91,7 @@ const PaymentForm = () => {
 
         if (paymentRes.data.data.paymentInsertResult.insertedId) {
           // Step 4: Show SweetAlert and Redirect
+          QueryClient.invalidateQueries(["payment-history", user?.email]);
           Swal.fire({
             icon: "success",
             title: "Payment Successful!",
