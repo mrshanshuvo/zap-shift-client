@@ -3,6 +3,8 @@ import { useForm } from "react-hook-form";
 import { Link, useLocation, useNavigate } from "react-router";
 import { FcGoogle } from "react-icons/fc";
 import useAuth from "../../../hooks/useAuth";
+import { toast } from "react-toastify";
+import useAxios from "../../../hooks/useAxios";
 
 const Login = () => {
   const {
@@ -10,26 +12,71 @@ const Login = () => {
     handleSubmit,
     formState: { errors },
   } = useForm();
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, signInUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const axiosInstance = useAxios()
 
   const from = location.state?.from || '/';
 
   const onSubmit = (data) => {
-    console.log(data);
-    // Handle login logic here
+    signInUser(data.email, data.password)
+      .then(async (userCredential) => {
+        const user = userCredential.user;
+        toast.success(`Welcome back, ${user.displayName || "User"}!`);
+
+        const userInfoDB = {
+          email: user.email,
+          last_login: new Date().toISOString(),
+        };
+
+        try {
+          await axiosInstance.post("/users", userInfoDB);
+        } catch (error) {
+          console.error("Error updating last_login:", error);
+        }
+
+        navigate(from, { replace: true });
+      })
+
+      .catch((error) => {
+        toast.error("Login failed: " + error.message);
+        console.error("Login error:", error);
+      });
   };
 
   const handleGoogleSignIn = () => {
     signInWithGoogle()
-      .then((result) => {
-        console.log("Google login successful:", result.user);
-        // Redirect or show success message here
-        navigate(from, { replace: true });
+      .then(async (result) => {
+        const user = result.user;
+
+        toast.success("Google login successful!");
+        console.log("Google login successful:", user);
+
+        // Prepare user data to send to backend
+        const userInfoDB = {
+          email: user.email,
+          name: user.displayName,
+          photoURL: user.photoURL,
+          role: 'user',
+          created_at: new Date().toISOString(),
+          last_login: new Date().toISOString(),
+        };
+
+        try {
+          // Send to your backend to save in MongoDB
+          const res = await axiosInstance.post("/users", userInfoDB);
+          console.log("User saved or already exists:", res.data);
+        } catch (error) {
+          toast.error("Error saving user info: " + error.message);
+          console.error("Error saving user:", error);
+        }
+
+        navigate("/dashboard");
       })
       .catch((error) => {
-        console.error("Error during Google login:", error.code, error.message);
+        toast.error("Google sign-in failed: " + error.message);
+        console.error("Google sign-in error:", error);
       });
   };
 

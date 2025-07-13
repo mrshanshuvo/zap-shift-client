@@ -4,9 +4,11 @@ import useAuth from "../../../hooks/useAuth";
 import { FcGoogle } from "react-icons/fc";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import axios from "axios";
+import { useState } from "react";
+import useAxios from "../../../hooks/useAxios";
 
 const Register = () => {
-
   const {
     register,
     handleSubmit,
@@ -14,14 +16,51 @@ const Register = () => {
   } = useForm();
 
   const navigate = useNavigate();
-  const { createUser, signInWithGoogle } = useAuth();
+  const { createUser, signInWithGoogle, updateUserProfile } = useAuth();
+  const [profilePic, setProfilePic] = useState(null);
+  const axiosInstance = useAxios()
 
   const onSubmit = (data) => {
     createUser(data.email, data.password)
-      .then((userCredential) => {
+      .then(async (userCredential) => {
         toast.success("User registered successfully!");
+
+        // 1. Prepare the complete user info object
+        const userInfoDB = {
+          email: data.email,
+          name: data.name,
+          photoURL: profilePic,
+          role: "user",
+          created_at: new Date().toISOString(),
+          last_login: new Date().toISOString(),
+        };
+
+        // 2. Send to backend
+        try {
+          const res = await axiosInstance.post("/users", userInfoDB);
+          console.log("User stored in DB:", res.data);
+        } catch (error) {
+          toast.error("Error updating user info: " + error.message);
+          console.error("Error updating user info:", error);
+        }
+
+        // 3. Update Firebase user profile
+        const userInfo = {
+          displayName: data.name,
+          photoURL: profilePic,
+        };
+
+        updateUserProfile(userInfo)
+          .then(() => {
+            toast.success("User profile updated successfully!");
+          })
+          .catch((error) => {
+            toast.error("Error updating user profile: " + error.message);
+            console.error("Error updating user profile:", error);
+          });
+
         console.log("User registered:", userCredential.user);
-        navigate("/dashboard"); // redirect after success
+        // navigate("/dashboard"); // optional
       })
       .catch((error) => {
         toast.error("Error registering user: " + error.message);
@@ -29,20 +68,56 @@ const Register = () => {
       });
   };
 
-  const handleGoogleSignIn = () => {
-    signInWithGoogle()
-      .then((result) => {
-        toast.success("Google login successful!");
-        console.log("Google login successful:", result.user);
-        navigate("/dashboard"); // redirect after success
-      })
-      .catch((error) => {
-        toast.error(`Error during Google login: ${error.message}`);
-        console.error("Error during Google login:", error.code, error.message);
-      });
+
+  const handleImageUpload = async (event) => {
+    const file = event.target.files[0];
+    console.log("Image uploaded:", file);
+    const formData = new FormData();
+    formData.append("image", file);
+
+    const res = await axios.post(
+      `https://api.imgbb.com/1/upload?key=${import.meta.env.VITE_IMGBB_API_KEY
+      }`,
+      formData
+    );
+    // console.log(res.data.data.url);
+    setProfilePic(res.data.data.url);
   };
 
+  const handleGoogleSignIn = () => {
+    signInWithGoogle()
+      .then(async (result) => {
+        const user = result.user;
 
+        toast.success("Google login successful!");
+        console.log("Google login successful:", user);
+
+        // Prepare user data to send to backend
+        const userInfoDB = {
+          email: user.email,
+          name: user.displayName,
+          photoURL: user.photoURL,
+          role: 'user',
+          created_at: new Date().toISOString(),
+          last_login: new Date().toISOString(),
+        };
+
+        try {
+          // Send to your backend to save in MongoDB
+          const res = await axiosInstance.post("/users", userInfoDB);
+          console.log("User saved or already exists:", res.data);
+        } catch (error) {
+          toast.error("Error saving user info: " + error.message);
+          console.error("Error saving user:", error);
+        }
+
+        navigate("/dashboard");
+      })
+      .catch((error) => {
+        toast.error("Google sign-in failed: " + error.message);
+        console.error("Google sign-in error:", error);
+      });
+  };
 
   return (
     <div className="space-y-6">
@@ -64,6 +139,26 @@ const Register = () => {
       </div>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        {/* Image Upload */}
+        <div>
+          <label
+            htmlFor="image"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Upload Image
+          </label>
+          <input
+            type="file"
+            id="image"
+            onChange={handleImageUpload}
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#CAEB66] focus:border-[#CAEB66]"
+            placeholder="Name"
+          />
+          {errors.name && (
+            <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
+          )}
+        </div>
+        {/* Name */}
         <div>
           <label
             htmlFor="name"
@@ -89,6 +184,7 @@ const Register = () => {
           )}
         </div>
 
+        {/* Email */}
         <div>
           <label
             htmlFor="email"
@@ -114,6 +210,7 @@ const Register = () => {
           )}
         </div>
 
+        {/* Password */}
         <div>
           <label
             htmlFor="password"
