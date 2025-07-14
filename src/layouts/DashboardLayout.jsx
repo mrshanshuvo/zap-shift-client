@@ -9,7 +9,7 @@ import {
   FiCreditCard,
   FiEdit,
 } from "react-icons/fi";
-import { MdOutlineLocalShipping } from "react-icons/md";
+import { MdOutlineGroups, MdOutlineLocalShipping, MdOutlinePending } from "react-icons/md";
 import { useQuery } from "@tanstack/react-query";
 import useAuth from "../hooks/useAuth";
 import useAxiosSecure from "../hooks/useAxiosSecure";
@@ -78,7 +78,20 @@ const DashboardLayout = () => {
       icon: <FiEdit className="text-lg" />,
       delay: "0.4s",
     },
+    {
+      to: "/dashboard/approvedRiders",
+      label: "Approved Riders",
+      icon: <MdOutlineGroups className="text-lg" />,
+      delay: "0.5s",
+    },
+    {
+      to: "/dashboard/pendingRiders",
+      label: "Pending Riders",
+      icon: <MdOutlinePending className="text-lg" />,
+      delay: "0.6s",
+    },
   ];
+
   return (
     <div className="drawer drawer-mobile lg:drawer-open min-h-screen bg-base-100">
       <input

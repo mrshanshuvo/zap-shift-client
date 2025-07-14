@@ -70,7 +70,7 @@ const Navbar = () => {
             <NavItem to="/addParcel">Add Parcel</NavItem>
             <NavItem to="/coverage">Coverage</NavItem>
             {user && <NavItem to="/dashboard">Dashboard</NavItem>}
-            <NavItem to="/about">About Us</NavItem>
+            <NavItem to="/beARider">Be a Rider</NavItem>
           </ul>
 
           {/* Call to action */}
