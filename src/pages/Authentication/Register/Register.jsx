@@ -1,5 +1,5 @@
 import { useForm } from "react-hook-form";
-import { Link, useNavigate } from "react-router";
+import { Link, useLocation, useNavigate } from "react-router";
 import useAuth from "../../../hooks/useAuth";
 import { FcGoogle } from "react-icons/fc";
 import { ToastContainer, toast } from "react-toastify";
@@ -19,6 +19,9 @@ const Register = () => {
   const { createUser, signInWithGoogle, updateUserProfile } = useAuth();
   const [profilePic, setProfilePic] = useState(null);
   const axiosInstance = useAxios()
+  const location = useLocation();
+  const from = location.state?.from || '/';
+  console.log(location, from);
 
   const onSubmit = (data) => {
     createUser(data.email, data.password)
@@ -60,7 +63,7 @@ const Register = () => {
           });
 
         console.log("User registered:", userCredential.user);
-        // navigate("/dashboard"); // optional
+        navigate(from, { replace: true });
       })
       .catch((error) => {
         toast.error("Error registering user: " + error.message);

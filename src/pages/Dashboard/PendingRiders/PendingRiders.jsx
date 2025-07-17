@@ -23,7 +23,7 @@ const PendingRiders = () => {
     staleTime: 60000
   });
 
-  const handleDecision = async (id, decision) => {
+  const handleDecision = async (id, decision, email) => {
     const isApproving = decision === "approve";
     const actionText = isApproving ? "approve" : "reject";
 
@@ -39,7 +39,8 @@ const PendingRiders = () => {
       if (result.isConfirmed) {
         try {
           const res = await axiosSecure.patch(`/riders/${id}/status`, {
-            status: isApproving ? "approved" : "rejected"
+            status: isApproving ? "approved" : "rejected",
+            email,
           });
 
           if (res.data.modifiedCount > 0) {
@@ -122,13 +123,13 @@ const PendingRiders = () => {
                       </button>
                       <button
                         className="btn btn-xs btn-success"
-                        onClick={() => handleDecision(rider._id, "approve")}
+                        onClick={() => handleDecision(rider._id, "approve", rider.email)}
                       >
                         Approve
                       </button>
                       <button
                         className="btn btn-xs btn-error"
-                        onClick={() => handleDecision(rider._id, "reject")}
+                        onClick={() => handleDecision(rider._id, "reject", rider.email)}
                       >
                         Reject
                       </button>

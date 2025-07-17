@@ -8,13 +8,16 @@ import {
   FiSearch,
   FiCreditCard,
   FiEdit,
+  FiUserCheck,
 } from "react-icons/fi";
 import { MdOutlineGroups, MdOutlineLocalShipping, MdOutlinePending } from "react-icons/md";
 import { useQuery } from "@tanstack/react-query";
 import useAuth from "../hooks/useAuth";
 import useAxiosSecure from "../hooks/useAxiosSecure";
+import useUserRole from "../hooks/useUserRole";
 
 const DashboardLayout = () => {
+  const { role, roleLoading } = useUserRole()
   const [activePath, setActivePath] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -78,18 +81,29 @@ const DashboardLayout = () => {
       icon: <FiEdit className="text-lg" />,
       delay: "0.4s",
     },
-    {
-      to: "/dashboard/approvedRiders",
-      label: "Approved Riders",
-      icon: <MdOutlineGroups className="text-lg" />,
-      delay: "0.5s",
-    },
-    {
-      to: "/dashboard/pendingRiders",
-      label: "Pending Riders",
-      icon: <MdOutlinePending className="text-lg" />,
-      delay: "0.6s",
-    },
+    // Conditionally push admin-only routes
+    ...(!roleLoading && role === "admin"
+      ? [
+        {
+          to: "/dashboard/approvedRiders",
+          label: "Approved Riders",
+          icon: <MdOutlineGroups className="text-lg" />,
+          delay: "0.5s",
+        },
+        {
+          to: "/dashboard/pendingRiders",
+          label: "Pending Riders",
+          icon: <MdOutlinePending className="text-lg" />,
+          delay: "0.6s",
+        },
+        {
+          to: "/dashboard/makeAdmins",
+          label: "Make Admins",
+          icon: <FiUserCheck className="text-lg" />,
+          delay: "0.7s",
+        },
+      ]
+      : []),
   ];
 
   return (

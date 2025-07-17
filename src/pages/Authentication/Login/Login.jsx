@@ -15,9 +15,9 @@ const Login = () => {
   const { signInWithGoogle, signInUser } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const from = location.state?.from || '/';
   const axiosInstance = useAxios()
 
-  const from = location.state?.from || '/';
 
   const onSubmit = (data) => {
     signInUser(data.email, data.password)
@@ -158,6 +158,7 @@ const Login = () => {
       <div className="text-center text-sm text-gray-600">
         Don't have any account?{" "}
         <Link
+          state={{ from }}
           to="/register"
           className="font-medium text-[#A1C94F] hover:text-[#8FB33F]"
         >
