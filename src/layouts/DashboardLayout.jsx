@@ -1,13 +1,19 @@
-import { NavLink, Outlet } from "react-router";
+import React, { useState, useEffect } from "react";
+import { NavLink, Outlet, useLocation } from "react-router";
 import ProFastLogo from "../pages/Shared/ProFastLogo/ProFastLogo";
 import {
   FiHome,
   FiPackage,
+  FiSearch,
   FiCreditCard,
   FiEdit,
   FiUserCheck,
 } from "react-icons/fi";
-import { MdOutlineGroups, MdOutlineLocalShipping, MdOutlinePending } from "react-icons/md";
+import {
+  MdOutlineGroups,
+  MdOutlineLocalShipping,
+  MdOutlinePending,
+} from "react-icons/md";
 import { useQuery } from "@tanstack/react-query";
 import useAuth from "../hooks/useAuth";
 import useAxiosSecure from "../hooks/useAxiosSecure";
@@ -15,7 +21,11 @@ import useUserRole from "../hooks/useUserRole";
 import { FaMotorcycle } from "react-icons/fa";
 
 const DashboardLayout = () => {
-  const { role, roleLoading } = useUserRole()
+  const { role, roleLoading } = useUserRole();
+  const [activePath, setActivePath] = useState("");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterStatus, setFilterStatus] = useState("all");
+  const location = useLocation();
   const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
 
@@ -28,6 +38,10 @@ const DashboardLayout = () => {
       return res.data;
     },
   });
+
+  useEffect(() => {
+    setActivePath(location.pathname);
+  }, [location]);
 
   const closeDrawer = () => {
     const drawer = document.getElementById("my-drawer-2");
@@ -54,7 +68,7 @@ const DashboardLayout = () => {
     },
     {
       to: "/dashboard/tractParcel",
-      label: "Track a Parcel",
+      label: "Tract a Parcel",
       icon: <MdOutlineLocalShipping className="text-lg" />,
       delay: "0.2s",
     },
@@ -88,10 +102,9 @@ const DashboardLayout = () => {
         {
           to: "/dashboard/assignRider",
           label: "Assign Rider",
-          icon: <FaMotorcycle className="text-lg" />, // you'll need to import this icon
+          icon: <FaMotorcycle className="text-lg" />,
           delay: "0.8s",
         },
-
       ]
       : []),
   ];
@@ -108,8 +121,38 @@ const DashboardLayout = () => {
       {/* Main Content Area */}
       <div className="drawer-content flex flex-col">
         {/* Main Content */}
-        <main className="flex-grow p-2 bg-base-50">
-          <Outlet context={{ parcelsData }} />
+        <main className="flex-grow p-4 md:p-6 bg-base-50">
+          <div className="max-w-7xl mx-auto">
+            {/* Action Bar (Only shown on My Parcels route) */}
+            {activePath === "/dashboard/myParcels" && (
+              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+                <h2 className="text-2xl font-semibold">My Parcels</h2>
+                <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
+                  <div className="relative flex-1 md:w-64">
+                    <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="Search parcels..."
+                      className="input input-bordered pl-10 w-full"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                  </div>
+                  <select
+                    className="select select-bordered w-full md:w-auto"
+                    value={filterStatus}
+                    onChange={(e) => setFilterStatus(e.target.value)}
+                  >
+                    <option value="all">All Statuses</option>
+                    <option value="paid">Paid</option>
+                    <option value="unpaid">Unpaid</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            <Outlet context={{ parcelsData, searchTerm, filterStatus }} />
+          </div>
         </main>
       </div>
 
