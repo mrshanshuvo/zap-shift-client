@@ -1,11 +1,8 @@
-import React, { useState, useEffect } from "react";
-import { NavLink, Outlet, useLocation } from "react-router";
+import { NavLink, Outlet } from "react-router";
 import ProFastLogo from "../pages/Shared/ProFastLogo/ProFastLogo";
 import {
   FiHome,
   FiPackage,
-  FiPlus,
-  FiSearch,
   FiCreditCard,
   FiEdit,
   FiUserCheck,
@@ -15,15 +12,13 @@ import { useQuery } from "@tanstack/react-query";
 import useAuth from "../hooks/useAuth";
 import useAxiosSecure from "../hooks/useAxiosSecure";
 import useUserRole from "../hooks/useUserRole";
+import { FaMotorcycle } from "react-icons/fa";
 
 const DashboardLayout = () => {
   const { role, roleLoading } = useUserRole()
-  const [activePath, setActivePath] = useState("");
-  const [searchTerm, setSearchTerm] = useState("");
-  const [filterStatus, setFilterStatus] = useState("all");
-  const location = useLocation();
   const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
+
   // Fetch parcels data
   const { data: parcelsData = [] } = useQuery({
     enabled: !!user?.email,
@@ -34,21 +29,10 @@ const DashboardLayout = () => {
     },
   });
 
-  useEffect(() => {
-    setActivePath(location.pathname);
-  }, [location]);
-
   const closeDrawer = () => {
     const drawer = document.getElementById("my-drawer-2");
     if (drawer?.checked) drawer.checked = false;
   };
-
-  // Calculate dashboard stats
-  const totalParcels = parcelsData.length;
-  const paidParcels = parcelsData.filter((parcel) => parcel.isPaid).length;
-  const pendingParcels = totalParcels - paidParcels;
-  const totalCost = parcelsData.reduce((sum, parcel) => sum + parcel.cost, 0);
-
   const navLinks = [
     {
       to: "/",
@@ -61,7 +45,6 @@ const DashboardLayout = () => {
       label: "My Parcels",
       icon: <FiPackage className="text-lg" />,
       delay: "0.1s",
-      badge: pendingParcels,
     },
     {
       to: "/dashboard/paymentHistory",
@@ -71,7 +54,7 @@ const DashboardLayout = () => {
     },
     {
       to: "/dashboard/tractParcel",
-      label: "Tract a Parcel",
+      label: "Track a Parcel",
       icon: <MdOutlineLocalShipping className="text-lg" />,
       delay: "0.2s",
     },
@@ -102,6 +85,13 @@ const DashboardLayout = () => {
           icon: <FiUserCheck className="text-lg" />,
           delay: "0.7s",
         },
+        {
+          to: "/dashboard/assignRider",
+          label: "Assign Rider",
+          icon: <FaMotorcycle className="text-lg" />, // you'll need to import this icon
+          delay: "0.8s",
+        },
+
       ]
       : []),
   ];
@@ -117,128 +107,9 @@ const DashboardLayout = () => {
 
       {/* Main Content Area */}
       <div className="drawer-content flex flex-col">
-
-        {/* Dashboard Stats (Only shown on home route) */}
-        {activePath === "/" && (
-          <div className="px-6 pt-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="stats bg-base-100 shadow border border-base-200">
-              <div className="stat">
-                <div className="stat-figure text-primary">
-                  <FiPackage className="text-2xl" />
-                </div>
-                <div className="stat-title">Total Parcels</div>
-                <div className="stat-value">{totalParcels}</div>
-                <div className="stat-desc">All your shipments</div>
-              </div>
-            </div>
-
-            <div className="stats bg-base-100 shadow border border-base-200">
-              <div className="stat">
-                <div className="stat-figure text-green-500">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    className="inline-block w-8 h-8 stroke-current"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M5 13l4 4L19 7"
-                    ></path>
-                  </svg>
-                </div>
-                <div className="stat-title">Paid Parcels</div>
-                <div className="stat-value">{paidParcels}</div>
-                <div className="stat-desc">Ready for shipping</div>
-              </div>
-            </div>
-
-            <div className="stats bg-base-100 shadow border border-base-200">
-              <div className="stat">
-                <div className="stat-figure text-yellow-500">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    className="inline-block w-8 h-8 stroke-current"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 6v6m0 0v6m0-6h6m-6 0H6"
-                    ></path>
-                  </svg>
-                </div>
-                <div className="stat-title">Pending Payment</div>
-                <div className="stat-value">{pendingParcels}</div>
-                <div className="stat-desc">Require attention</div>
-              </div>
-            </div>
-
-            <div className="stats bg-base-100 shadow border border-base-200">
-              <div className="stat">
-                <div className="stat-figure text-blue-500">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    className="inline-block w-8 h-8 stroke-current"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    ></path>
-                  </svg>
-                </div>
-                <div className="stat-title">Total Cost</div>
-                <div className="stat-value">৳{totalCost}</div>
-                <div className="stat-desc">All shipments</div>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* Main Content */}
-        <main className="flex-grow p-4 md:p-6 bg-base-50">
-          <div className="max-w-7xl mx-auto">
-            {/* Action Bar (Only shown on My Parcels route) */}
-            {activePath === "/dashboard/myParcels" && (
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                <h2 className="text-2xl font-semibold">My Parcels</h2>
-                <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto">
-                  <div className="relative flex-1 md:w-64">
-                    <FiSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search parcels..."
-                      className="input input-bordered pl-10 w-full"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                  </div>
-                  <select
-                    className="select select-bordered w-full md:w-auto"
-                    value={filterStatus}
-                    onChange={(e) => setFilterStatus(e.target.value)}
-                  >
-                    <option value="all">All Statuses</option>
-                    <option value="paid">Paid</option>
-                    <option value="unpaid">Unpaid</option>
-                  </select>
-                  <button className="btn btn-primary gap-2">
-                    <FiPlus /> New Parcel
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <Outlet context={{ parcelsData, searchTerm, filterStatus }} />
-          </div>
+        <main className="flex-grow p-2 bg-base-50">
+          <Outlet context={{ parcelsData }} />
         </main>
       </div>
 
@@ -249,7 +120,7 @@ const DashboardLayout = () => {
           className="drawer-overlay"
           aria-label="Close sidebar"
         ></label>
-        <div className="menu p-4 overflow-y-auto w-80 bg-base-100 text-base-content border-r border-base-200 flex flex-col h-full">
+        <div className="menu p-4 overflow-y-auto w-50 bg-base-100 text-base-content border-r border-base-200 flex flex-col h-full">
           {/* Logo */}
           <div className="px-4 py-6">
             <ProFastLogo />
