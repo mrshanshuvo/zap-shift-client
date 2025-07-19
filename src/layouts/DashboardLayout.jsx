@@ -67,8 +67,8 @@ const DashboardLayout = () => {
       delay: "0.1s",
     },
     {
-      to: "/dashboard/tractParcel",
-      label: "Tract a Parcel",
+      to: "/dashboard/trackParcel",
+      label: "Track Parcels",
       icon: <MdOutlineLocalShipping className="text-lg" />,
       delay: "0.2s",
     },

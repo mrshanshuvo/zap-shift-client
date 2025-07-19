@@ -1,21 +1,89 @@
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import React, { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 
 const AssignRider = () => {
   const axiosSecure = useAxiosSecure();
+  const queryClient = useQueryClient();
 
-  const { data: parcels = [], isLoading, error } = useQuery({
+  // State for assignment modal
+  const [selectedParcel, setSelectedParcel] = useState(null);
+  const [selectedRider, setSelectedRider] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Fetch parcels
+  const { data: parcels = [], isLoading: parcelsLoading, error: parcelsError } = useQuery({
     queryKey: ["assignableParcels"],
     queryFn: async () => {
       const res = await axiosSecure.get(
         "/parcels?payment_status=paid&delivery_status=not_collected"
       );
+      return res.data.sort((a, b) => new Date(b.creation_date) - new Date(a.creation_date));
+    },
+  });
+
+  // Fetch available riders
+  const { data: riders = [], isLoading: ridersLoading } = useQuery({
+    queryKey: ["availableRiders"],
+    queryFn: async () => {
+      const res = await axiosSecure.get("/riders?status=available");
       return res.data;
     },
   });
 
-  if (isLoading) {
+  // Assignment mutation
+  const assignRiderMutation = useMutation({
+    mutationFn: async ({ parcelId, riderId }) => {
+      const res = await axiosSecure.patch(`/parcels/${parcelId}/assign`, {
+        riderId,
+        delivery_status: "on_the_way"
+      });
+      return res.data;
+    },
+    onSuccess: () => {
+      // Invalidate and refetch parcels
+      queryClient.invalidateQueries(["assignableParcels"]);
+      queryClient.invalidateQueries(["availableRiders"]);
+
+      // Close modal and reset state
+      setIsModalOpen(false);
+      setSelectedParcel(null);
+      setSelectedRider("");
+
+      // Show success notification (you can replace with your toast system)
+      alert("Rider assigned successfully!");
+    },
+    onError: (error) => {
+      console.error("Assignment failed:", error);
+      alert("Failed to assign rider. Please try again.");
+    }
+  });
+
+  const handleAssignClick = (parcel) => {
+    setSelectedParcel(parcel);
+    setIsModalOpen(true);
+    setSelectedRider(""); // Reset rider selection
+  };
+
+  const handleConfirmAssignment = () => {
+    if (!selectedRider) {
+      alert("Please select a rider");
+      return;
+    }
+
+    assignRiderMutation.mutate({
+      parcelId: selectedParcel._id,
+      riderId: selectedRider
+    });
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setSelectedParcel(null);
+    setSelectedRider("");
+  };
+
+  if (parcelsLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <span className="loading loading-spinner loading-lg"></span>
@@ -23,13 +91,14 @@ const AssignRider = () => {
     );
   }
 
-  if (error) {
+  if (parcelsError) {
     return <p className="text-red-500">Failed to load parcels.</p>;
   }
 
   return (
     <div className="p-6">
       <h2 className="text-2xl font-semibold mb-4">Assign Rider to Parcels</h2>
+
       {parcels.length === 0 ? (
         <p className="text-gray-500">No parcels available for assignment.</p>
       ) : (
@@ -71,15 +140,18 @@ const AssignRider = () => {
                     </div>
                   </td>
                   <td className="text-sm">
-                    <div>{parcel.senderDistrict}</div>
+                    <div>{parcel.senderRegion}</div>
                     <div className="text-xs text-gray-500">
-                      → {parcel.receiverDistrict}
+                      → {parcel.receiverRegion}
                     </div>
                   </td>
                   <td>{parcel.weight}</td>
                   <td>{parcel.cost}</td>
                   <td>
-                    <button className="btn btn-sm bg-blue-500 hover:bg-blue-600 text-white rounded">
+                    <button
+                      className="btn btn-sm bg-blue-500 hover:bg-blue-600 text-white rounded"
+                      onClick={() => handleAssignClick(parcel)}
+                    >
                       Assign
                     </button>
                   </td>
@@ -87,6 +159,78 @@ const AssignRider = () => {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Assignment Modal */}
+      {isModalOpen && selectedParcel && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md mx-4">
+            <h3 className="text-lg font-semibold mb-4">Assign Rider</h3>
+
+            {/* Parcel Info */}
+            <div className="mb-4 p-3 bg-gray-50 rounded">
+              <p className="text-sm text-gray-600">Parcel:</p>
+              <p className="font-medium">{selectedParcel.parcelName}</p>
+              <p className="text-sm text-gray-600 mt-1">
+                ID: {selectedParcel.trackingId}
+              </p>
+              <p className="text-sm text-gray-600">
+                {selectedParcel.senderRegion} → {selectedParcel.receiverRegion}
+              </p>
+            </div>
+
+            {/* Rider Selection */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">
+                Select Rider:
+              </label>
+              {ridersLoading ? (
+                <div className="flex items-center justify-center py-2">
+                  <span className="loading loading-spinner loading-sm"></span>
+                  <span className="ml-2">Loading riders...</span>
+                </div>
+              ) : (
+                <select
+                  value={selectedRider}
+                  onChange={(e) => setSelectedRider(e.target.value)}
+                  className="select select-bordered w-full"
+                >
+                  <option value="">Choose a rider</option>
+                  {riders.map((rider) => (
+                    <option key={rider._id} value={rider._id}>
+                      {rider.name} - {rider.phone} ({rider.district})
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex justify-end space-x-2">
+              <button
+                className="btn btn-sm btn-outline"
+                onClick={handleModalClose}
+                disabled={assignRiderMutation.isPending}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn btn-sm bg-blue-500 hover:bg-blue-600 text-white"
+                onClick={handleConfirmAssignment}
+                disabled={assignRiderMutation.isPending || !selectedRider}
+              >
+                {assignRiderMutation.isPending ? (
+                  <>
+                    <span className="loading loading-spinner loading-xs"></span>
+                    Assigning...
+                  </>
+                ) : (
+                  "Confirm Assignment"
+                )}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

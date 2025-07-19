@@ -1,5 +1,5 @@
 import { CardElement, useElements, useStripe } from "@stripe/react-stripe-js";
-import { QueryClient, useQuery } from "@tanstack/react-query";
+import { QueryClient, useQuery, useQueryClient } from "@tanstack/react-query";
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
@@ -15,6 +15,7 @@ const PaymentForm = () => {
   const navigate = useNavigate();
   const [error, setError] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const queryClient = useQueryClient();
 
   const { isPending, data: parcel = {} } = useQuery({
     queryKey: ["parcel", id],
@@ -91,7 +92,7 @@ const PaymentForm = () => {
 
         if (paymentRes.data.data.paymentInsertResult.insertedId) {
           // Step 4: Show SweetAlert and Redirect
-          QueryClient.invalidateQueries(["payment-history", user?.email]);
+          queryClient.invalidateQueries(["payment-history", user?.email]);
           Swal.fire({
             icon: "success",
             title: "Payment Successful!",
