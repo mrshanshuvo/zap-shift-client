@@ -2,12 +2,13 @@ import { useForm } from "react-hook-form";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useState } from "react";
-import { useLoaderData } from "react-router";
+import { useLoaderData, useNavigate } from "react-router";
 import { FiChevronDown } from "react-icons/fi";
 import Swal from "sweetalert2";
 import withReactContent from "sweetalert2-react-content";
 import useAuth from "../../hooks/useAuth";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
+import useTrackingLogger from "../../hooks/useTrackingLogger";
 
 const MySwal = withReactContent(Swal);
 const generateTrackingId = () => {
@@ -26,6 +27,8 @@ const AddParcel = () => {
   const axiosSecure = useAxiosSecure();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const serviceAreas = useLoaderData();
+  const navigate = useNavigate();
+  const { logTracking } = useTrackingLogger();
 
   // Organize regions and their districts
   const regionsData = serviceAreas.reduce((acc, area) => {
@@ -171,37 +174,37 @@ const AddParcel = () => {
         ...data,
         cost,
         created_by: user.email,
-        payment_status: 'unpaid',
-        delivery_status: 'not_collected',
+        payment_status: "unpaid",
+        delivery_status: "not_collected",
         creation_date: new Date().toISOString(),
         trackingId: trackingId,
       };
 
-      console.log("Booking parcel with data:", parcelData);
+      // Save parcel data
+      const res = await axiosSecure.post("/parcels", parcelData);
 
-      // Save parcel data to the server
-      axiosSecure.post("/parcels", parcelData).then((res) => {
-        console.log(res.data.data);
-        if (res.data.data.insertedId) {
-          //TODO: Redirect to the payment page
-          Swal.fire({
-            title: "Parcel Booked!",
-            text: "Redirecting to payment...",
-            icon: "success",
-            showConfirmButton: false,
-            timer: 2000,
-          })
-        }
-      });
+      if (res.data.data.insertedId) {
+        // Log tracking - now only needs trackingId (no parcelId required)
+        await logTracking({
+          trackingId: trackingId,
+          status: "not_collected",
+          details: `Parcel booked by ${user.email}`,
+          location: data.senderServiceCenter,
+          updated_by: user.email
+        });
 
-      // Dismiss the estimation toast
-      toast.dismiss("cost-estimation");
+        Swal.fire({
+          title: "Parcel Booked!",
+          text: "Redirecting to your parcels...",
+          icon: "success",
+          showConfirmButton: false,
+          timer: 2000,
+        });
+        navigate('/dashboard/myParcels');
+      }
     } catch (error) {
-      toast.error("Failed to book parcel", {
-        position: "top-center",
-        className: "!rounded-xl",
-      });
-      console.log(error.message);
+      toast.error("Failed to book parcel");
+      console.error(error);
     }
   };
 

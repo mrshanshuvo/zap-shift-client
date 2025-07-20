@@ -8,6 +8,7 @@ import {
   FiCreditCard,
   FiEdit,
   FiUserCheck,
+  FiCheck,
 } from "react-icons/fi";
 import {
   MdOutlineGroups,
@@ -78,6 +79,30 @@ const DashboardLayout = () => {
       icon: <FiEdit className="text-lg" />,
       delay: "0.4s",
     },
+    // Conditionally push rider-only routes
+    ...(!roleLoading && role === "rider"
+      ? [
+        {
+          to: "/dashboard/pendingDeliveries",
+          label: "Pending Deliveries",
+          icon: <FiPackage className="text-lg" />,
+          delay: "0.35s",
+        },
+        {
+          to: "/dashboard/completedDeliveries",
+          label: "Completed Deliveries",
+          icon: <FiCheck className="text-lg" />,
+          delay: "0.4s",
+        },
+        {
+          to: "/dashboard/myEarnings",
+          label: "My Earnings",
+          icon: <FiCreditCard className="text-lg" />,
+          delay: "0.4s",
+        }
+      ]
+      : []),
+
     // Conditionally push admin-only routes
     ...(!roleLoading && role === "admin"
       ? [

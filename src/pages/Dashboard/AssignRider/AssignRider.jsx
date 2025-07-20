@@ -36,7 +36,7 @@ const AssignRider = () => {
     mutationFn: async ({ parcelId, riderId }) => {
       const res = await axiosSecure.patch(`/parcels/${parcelId}/assign`, {
         riderId,
-        delivery_status: "on_the_way"
+        delivery_status: "assigned"
       });
       return res.data;
     },
