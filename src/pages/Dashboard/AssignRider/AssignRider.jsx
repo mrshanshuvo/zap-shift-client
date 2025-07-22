@@ -1,10 +1,15 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
+import toast from "react-hot-toast";
+import useTrackingLogger from "../../../hooks/useTrackingLogger";
+import useAuth from "../../../hooks/useAuth";
 
 const AssignRider = () => {
   const axiosSecure = useAxiosSecure();
   const queryClient = useQueryClient();
+  const { logTracking } = useTrackingLogger();
+  const { user } = useAuth();
 
   // State for assignment modal
   const [selectedParcel, setSelectedParcel] = useState(null);
@@ -40,22 +45,37 @@ const AssignRider = () => {
       });
       return res.data;
     },
-    onSuccess: () => {
-      // Invalidate and refetch parcels
-      queryClient.invalidateQueries(["assignableParcels"]);
-      queryClient.invalidateQueries(["availableRiders"]);
+    onSuccess: async () => {
+      const parcel = selectedParcel;
 
-      // Close modal and reset state
+      // Now safe to reset state
       setIsModalOpen(false);
       setSelectedParcel(null);
       setSelectedRider("");
 
-      // Show success notification (you can replace with your toast system)
-      alert("Rider assigned successfully!");
+      const toastId = toast.loading("Logging assignment...");
+
+      try {
+        queryClient.invalidateQueries(["assignableParcels"]);
+        queryClient.invalidateQueries(["availableRiders"]);
+
+        await logTracking({
+          trackingId: parcel.trackingId,
+          status: "assigned",
+          details: `Assigned rider ${selectedRider} to parcel ${parcel.trackingId}`,
+          location: parcel.senderServiceCenter,
+          updated_by: user.email
+        });
+
+        toast.success("Rider assigned successfully!", { id: toastId });
+      } catch (err) {
+        console.error("Tracking log failed:", err);
+        toast.error("Rider assigned, but tracking log failed.", { id: toastId });
+      }
     },
     onError: (error) => {
       console.error("Assignment failed:", error);
-      alert("Failed to assign rider. Please try again.");
+      toast.error("Failed to assign rider. Please try again.");
     }
   });
 
@@ -67,7 +87,7 @@ const AssignRider = () => {
 
   const handleConfirmAssignment = () => {
     if (!selectedRider) {
-      alert("Please select a rider");
+      toast.error("Please select a rider");
       return;
     }
 

@@ -2,10 +2,14 @@ import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import toast from "react-hot-toast";
+import useTrackingLogger from "../../../hooks/useTrackingLogger";
+import useAuth from "../../../hooks/useAuth";
 
 const PendingDeliveries = () => {
   const axiosSecure = useAxiosSecure();
   const queryClient = useQueryClient();
+  const { logTracking } = useTrackingLogger();
+  const { user } = useAuth();
 
   // State for status update
   const [selectedParcel, setSelectedParcel] = useState(null);
@@ -37,7 +41,9 @@ const PendingDeliveries = () => {
       });
       return res.data;
     },
-    onSuccess: () => {
+    onSuccess: async () => {
+      const parcel = selectedParcel; // capture before clearing state
+
       queryClient.invalidateQueries(["riderParcels"]);
       setIsModalOpen(false);
       setSelectedParcel(null);
@@ -45,7 +51,19 @@ const PendingDeliveries = () => {
         position: "top-center",
         duration: 3000,
       });
+
+      // 🧠 Log tracking
+      if (parcel) {
+        await logTracking({
+          trackingId: parcel.trackingId,
+          status: "delivered",
+          details: `Parcel delivered by ${user.displayName}`,
+          location: parcel.receiverServiceCenter, // Make sure this field exists
+          updated_by: user.email,
+        });
+      }
     },
+
     onError: (error) => {
       console.error("Status update failed:", error);
       toast.error(error.response?.data?.message || "Failed to update status", {
@@ -57,16 +75,25 @@ const PendingDeliveries = () => {
 
   // Mark as Picked Mutation
   const markPickedMutation = useMutation({
-    mutationFn: async (parcelId) => {
-      const res = await axiosSecure.patch(`/parcels/${parcelId}/pick`);
+    mutationFn: async (parcel) => {
+      // Use parcel._id to call backend
+      const res = await axiosSecure.patch(`/parcels/${parcel._id}/pick`);
       return res.data;
     },
-    onSuccess: () => {
+    onSuccess: async (data, parcel) => {
       queryClient.invalidateQueries(["riderParcels"]);
-      toast.success("Parcel marked as picked!", {
-        position: "top-center",
-        duration: 3000,
-      });
+      toast.success("Parcel marked as picked!", { position: "top-center", duration: 3000 });
+
+      // Log tracking using the parcel object passed
+      if (parcel) {
+        await logTracking({
+          trackingId: parcel.trackingId,
+          status: "picked",
+          details: `Parcel picked by ${user.displayName}`,
+          location: parcel.senderServiceCenter, // Ensure this exists in parcel data
+          updated_by: user.email,
+        });
+      }
     },
     onError: (error) => {
       console.error("Error marking as picked:", error);
@@ -76,6 +103,7 @@ const PendingDeliveries = () => {
       });
     }
   });
+
 
   const handleStatusUpdate = (parcel) => {
     setSelectedParcel(parcel);
@@ -220,14 +248,13 @@ const PendingDeliveries = () => {
               {/* Action Button */}
               {parcel.delivery_status === "assigned" && (
                 <button
-                  onClick={() => markPickedMutation.mutate(parcel._id)}
+                  onClick={() => markPickedMutation.mutate(parcel)}  // pass whole parcel object here
                   disabled={markPickedMutation.isPending}
                   className="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded font-medium"
                 >
-                  {markPickedMutation.isPending
-                    ? "Marking..."
-                    : "Mark as Picked"}
+                  {markPickedMutation.isPending ? "Marking..." : "Mark as Picked"}
                 </button>
+
               )}
 
               {parcel.delivery_status === "on_the_way" && (

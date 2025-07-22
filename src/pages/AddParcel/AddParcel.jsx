@@ -188,7 +188,7 @@ const AddParcel = () => {
         await logTracking({
           trackingId: trackingId,
           status: "not_collected",
-          details: `Parcel booked by ${user.email}`,
+          details: `Parcel booked by ${user.displayName}`,
           location: data.senderServiceCenter,
           updated_by: user.email
         });

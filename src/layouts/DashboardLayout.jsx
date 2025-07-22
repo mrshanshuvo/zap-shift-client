@@ -50,7 +50,7 @@ const DashboardLayout = () => {
   };
   const navLinks = [
     {
-      to: "/",
+      to: "/dashboard",
       label: "Dashboard",
       icon: <FiHome className="text-lg" />,
       delay: "0s",
